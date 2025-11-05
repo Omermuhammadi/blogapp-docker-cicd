@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database Service
+  db:
+    image: postgres:15-alpine
+    container_name: blogapp-db
+    restart: always
+    environment:
+      POSTGRES_USER: bloguser
+      POSTGRES_PASSWORD: blogpass123
+      POSTGRES_DB: blogapp
+    ports:
+      - "5432:5432"
+    volumes:
+      # Persistent volume for database data
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - blogapp-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bloguser -d blogapp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Web Application Service
+  web:
+    build: .
+    container_name: blogapp-web
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      SESSION_SECRET: your-production-secret-key-change-this
+      # Database connection environment variables
+      RDS_HOSTNAME: db
+      RDS_PORT: 5432
+      RDS_DB_NAME: blogapp
+      RDS_USERNAME: bloguser
+      RDS_PASSWORD: blogpass123
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - blogapp-network
+
+# Named volumes for persistent data
+volumes:
+  postgres_data:
+    driver: local
+
+# Network for inter-container communication
+networks:
+  blogapp-network:
+    driver: bridge

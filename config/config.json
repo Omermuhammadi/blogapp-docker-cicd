@@ -1,0 +1,24 @@
+{
+  "development": {
+    "username": "bloguser",
+    "password": "blogpass123",
+    "database": "blogapp",
+    "host": "blogapp-db.cqbe2as608yr.us-east-1.rds.amazonaws.com",
+    "dialect": "postgres",
+    "port": 5432,
+    "dialectOptions": {
+      "ssl": {
+        "require": true,
+        "rejectUnauthorized": false
+      }
+    }
+  },
+  "production": {
+    "username": "bloguser",
+    "password": "blogpass123",
+    "database": "blogapp",
+    "host": "db",
+    "dialect": "postgres",
+    "port": 5432
+  }
+}
