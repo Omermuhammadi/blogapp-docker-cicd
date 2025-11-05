@@ -65,8 +65,8 @@ pipeline {
             steps {
                 echo '🐳 Building Docker image...'
                 script {
-                    def dockerImage = docker.build("${DOCKER_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}")
                     env.DOCKER_IMAGE = "${DOCKER_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
+                    sh "docker build -t ${env.DOCKER_IMAGE} ."
                     echo "✅ Docker image built: ${env.DOCKER_IMAGE}"
                 }
             }
