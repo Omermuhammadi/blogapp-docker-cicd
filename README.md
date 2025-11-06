@@ -1,6 +1,21 @@
 # BlogApp - Dockerized Web Application
 
-A full-stack blog application built with Node.js, Express, PostgreSQL, and Docker, with CI/CD pipeline automation using Jenkins.
+# BlogApp - ASSIGNMENT COMPLETED ✅
+
+A simple blog application built with Node.js, Express, and PostgreSQL.
+
+## 🎯 Successfully Implemented:
+- ✅ Docker containerization
+- ✅ Jenkins CI/CD Pipeline  
+- ✅ GitHub webhook automation
+- ✅ AWS EC2 deployment
+- ✅ Database persistence with volumes
+- ✅ Full application functionality
+
+**Live Demo**: http://18.212.93.75:3000
+**Jenkins Pipeline**: http://18.212.93.75:8080
+
+Last Updated: November 6, 2025 - Pipeline Test
 
 ## Features
 - User registration and authentication
