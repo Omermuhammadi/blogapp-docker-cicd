@@ -1,16 +1,6 @@
 pipeline {
     agent any
     
-    environment {
-        DOCKER_REGISTRY = 'omermuhammadi'
-        IMAGE_NAME = 'blogapp'
-        IMAGE_TAG = "${BUILD_NUMBER}"
-        CONTAINER_NAME = 'blogapp-container'
-        APP_PORT = '3000'
-        DB_CONTAINER_NAME = 'blogapp-db'
-        VOLUME_NAME = 'blogapp_db_data'
-    }
-    
     stages {
         stage('Checkout') {
             steps {
@@ -64,69 +54,28 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 echo '🐳 Building Docker image...'
-                script {
-                    env.DOCKER_IMAGE = "${DOCKER_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
-                    sh "docker build -t ${env.DOCKER_IMAGE} ."
-                    echo "✅ Docker image built: ${env.DOCKER_IMAGE}"
-                }
+                sh '''
+                    docker build -t blogapp:latest .
+                    echo "✅ Docker image built: blogapp:latest"
+                '''
             }
         }
         
-        stage('Cleanup Previous Deployment') {
+        stage('Stop Previous Deployment') {
             steps {
-                echo '🧹 Cleaning up previous deployment...'
+                echo '🛑 Stopping previous deployment...'
                 sh '''
-                    # Stop and remove existing containers
-                    docker stop ${CONTAINER_NAME} || true
-                    docker stop ${DB_CONTAINER_NAME} || true
-                    docker rm ${CONTAINER_NAME} || true
-                    docker rm ${DB_CONTAINER_NAME} || true
-                    
-                    # Remove old images (keep last 3 builds)
-                    docker images ${DOCKER_REGISTRY}/${IMAGE_NAME} --format "table {{.Repository}}:{{.Tag}}" | tail -n +4 | xargs -r docker rmi || true
-                    
-                    echo "✅ Cleanup completed"
+                    docker-compose down || true
+                    echo "✅ Previous deployment stopped"
                 '''
             }
         }
         
         stage('Deploy Application') {
             steps {
-                echo '🚀 Deploying application with volume mounting...'
+                echo '🚀 Deploying application with Docker Compose...'
                 sh '''
-                    # Create volume for database if it doesn't exist
-                    docker volume create ${VOLUME_NAME} || true
-                    
-                    # Start PostgreSQL database container with volume mounting
-                    echo "Starting PostgreSQL database..."
-                    docker run -d \\
-                        --name ${DB_CONTAINER_NAME} \\
-                        -e POSTGRES_DB=blogapp \\
-                        -e POSTGRES_USER=bloguser \\
-                        -e POSTGRES_PASSWORD=blogpass123 \\
-                        -v ${VOLUME_NAME}:/var/lib/postgresql/data \\
-                        -p 5432:5432 \\
-                        postgres:13
-                    
-                    # Wait for database to be ready
-                    echo "Waiting for database to be ready..."
-                    sleep 10
-                    
-                    # Start application container with volume mounting
-                    echo "Starting application container..."
-                    docker run -d \\
-                        --name ${CONTAINER_NAME} \\
-                        --link ${DB_CONTAINER_NAME}:db \\
-                        -e NODE_ENV=production \\
-                        -e DB_HOST=db \\
-                        -e DB_PORT=5432 \\
-                        -e DB_NAME=blogapp \\
-                        -e DB_USER=bloguser \\
-                        -e DB_PASSWORD=blogpass123 \\
-                        -e SESSION_SECRET=jenkins-deployed-secret-key \\
-                        -p ${APP_PORT}:3000 \\
-                        ${DOCKER_IMAGE}
-                    
+                    docker-compose up -d
                     echo "✅ Application deployed successfully"
                 '''
             }
@@ -138,29 +87,29 @@ pipeline {
                 sh '''
                     # Wait for application to start
                     echo "Waiting for application to start..."
-                    sleep 15
+                    sleep 20
                     
                     # Check if containers are running
-                    if docker ps | grep -q ${CONTAINER_NAME}; then
+                    if docker ps | grep -q blogapp-web; then
                         echo "✅ Application container is running"
                     else
                         echo "❌ Application container failed to start"
-                        docker logs ${CONTAINER_NAME}
+                        docker logs blogapp-web
                         exit 1
                     fi
                     
-                    if docker ps | grep -q ${DB_CONTAINER_NAME}; then
+                    if docker ps | grep -q blogapp-db; then
                         echo "✅ Database container is running"
                     else
                         echo "❌ Database container failed to start"
-                        docker logs ${DB_CONTAINER_NAME}
+                        docker logs blogapp-db
                         exit 1
                     fi
                     
                     # Test HTTP endpoint
                     echo "Testing HTTP endpoint..."
                     for i in {1..10}; do
-                        if curl -f -s http://localhost:${APP_PORT}/ > /dev/null; then
+                        if curl -f -s http://localhost:3000/ > /dev/null; then
                             echo "✅ Application is responding to HTTP requests"
                             break
                         else
@@ -169,7 +118,7 @@ pipeline {
                         fi
                         if [ $i -eq 10 ]; then
                             echo "❌ Application failed to respond after 10 attempts"
-                            docker logs ${CONTAINER_NAME}
+                            docker logs blogapp-web
                             exit 1
                         fi
                     done
@@ -183,19 +132,15 @@ pipeline {
                 sh '''
                     echo "🚀 BlogApp CI/CD Pipeline Completed Successfully!"
                     echo "=================================================="
-                    echo "📦 Docker Image: ${DOCKER_IMAGE}"
-                    echo "🌐 Application URL: http://$(curl -s ifconfig.me):${APP_PORT}"
+                    echo "📦 Docker Image: blogapp:latest"
+                    echo "🌐 Application URL: http://$(curl -s ifconfig.me):3000"
                     echo "🗄️  Database: PostgreSQL with persistent volume"
-                    echo "💾 Volume: ${VOLUME_NAME}"
                     echo "🏷️  Build Number: ${BUILD_NUMBER}"
                     echo "⏰ Build Time: $(date)"
                     echo "=================================================="
                     
                     echo "📊 Container Status:"
                     docker ps --format "table {{.Names}}\\t{{.Status}}\\t{{.Ports}}"
-                    
-                    echo "📁 Volumes:"
-                    docker volume ls | grep ${VOLUME_NAME}
                 '''
             }
         }
@@ -214,8 +159,8 @@ pipeline {
             echo '❌ Pipeline failed!'
             sh '''
                 echo "Container logs for debugging:"
-                docker logs ${CONTAINER_NAME} || echo "No application container logs"
-                docker logs ${DB_CONTAINER_NAME} || echo "No database container logs"
+                docker logs blogapp-web || echo "No application container logs"
+                docker logs blogapp-db || echo "No database container logs"
             '''
         }
     }
