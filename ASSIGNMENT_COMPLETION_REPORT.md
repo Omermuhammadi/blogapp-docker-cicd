@@ -1,4 +1,5 @@
-# BlogApp CI/CD Pipeline - Assignment Completion Report
+
+ # BlogApp CI/CD Pipeline - Assignment Completion Report
 
 ## 🎯 **Assignment Overview**
 Successfully implemented a complete CI/CD pipeline for BlogApp using Docker, Jenkins, and AWS EC2 with GitHub integration.

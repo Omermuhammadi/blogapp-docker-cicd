@@ -11,6 +11,7 @@ A simple blog application built with Node.js, Express, and PostgreSQL.
 - ✅ AWS EC2 deployment
 - ✅ Database persistence with volumes
 - ✅ Full application functionality
+- 
 
 **Live Demo**: http://18.212.93.75:3000
 **Jenkins Pipeline**: http://18.212.93.75:8080
