@@ -11,7 +11,7 @@ Successfully implemented a complete CI/CD pipeline for BlogApp using Docker, Jen
 - ✅ **Docker Compose** setup for local development
 - ✅ **Volume mounting strategy** for persistent data storage
 - ✅ **Environment configuration** for production deployment
-
+0
 ### **2. GitHub Repository Setup**
 - 📦 **Repository**: https://github.com/Omermuhammadi/blogapp-docker-cicd
 - ✅ **Clean codebase** with all necessary files
